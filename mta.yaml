@@ -1,5 +1,5 @@
 ID: scpapp
-_schema-version: "2.1"
+_schema-version: '2.1'
 parameters:
   deploy_mode: html5-repo
 version: 0.0.1
@@ -12,11 +12,25 @@ modules:
       memory: 256M
     requires:
       - name: scpapp_html5_repo_runtime
+      - name: srv_api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          name: srv_api
+          url: '~{url}'
+      - name: portal_resources_scpapp
+      - name: scpapp-uaa
   - name: scpapp_ui_deployer
     type: com.sap.html5.application-content
     path: scpapp_ui_deployer
     requires:
       - name: scpapp_html5_repo_host
+    build-parameters:
+      requires:
+        - name: OrderList
+          artifacts:
+            - './*'
+          target-path: resources/OrderList
   - name: scpapp-db
     type: hdb
     path: db
@@ -33,13 +47,42 @@ modules:
     provides:
       - name: srv_api
         properties:
-          url: ${default-url}
+          url: '${default-url}'
     requires:
       - name: scpapp-db-hdi-container
         properties:
-          JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml:
-            {"service_name_for_DefaultDB" : "~{hdi-container-name}"}]'
+          JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml: {"service_name_for_DefaultDB" : "~{hdi-container-name}"}]'
       - name: scpapp-uaa
+  - name: OrderList
+    type: html5
+    path: OrderList
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+      supported-platforms: []
+      build-result: dist
+    requires:
+      - name: srv_api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          strictSSL: false
+          name: srv_api
+          url: '~{url}'
+  - name: Launchpad
+    type: com.sap.portal.content
+    path: Launchpad
+    parameters:
+      stack: cflinuxfs3
+      memory: 128M
+      buildpack: 'https://github.com/cloudfoundry/nodejs-buildpack/releases/download/v1.6.39/nodejs-buildpack-cflinuxfs3-v1.6.39.zip'
+    requires:
+      - name: portal_resources_scpapp
+      - name: scpapp-uaa
+      - name: scpapp_html5_repo_host
+      - name: scpapp_ui_deployer
 resources:
   - name: scpapp_html5_repo_runtime
     parameters:
@@ -54,12 +97,15 @@ resources:
   - name: scpapp-db-hdi-container
     type: com.sap.xs.hdi-container
     properties:
-      hdi-container-name: ${service-name}
+      hdi-container-name: '${service-name}'
   - name: scpapp-uaa
     type: org.cloudfoundry.managed-service
     parameters:
+      path: ./xs-security.json
       service-plan: application
       service: xsuaa
-      config:
-        xsappname: scpapp-${space}
-        tenant-mode: dedicated
+  - name: portal_resources_scpapp
+    parameters:
+      service-plan: standard
+      service: portal
+    type: org.cloudfoundry.managed-service
