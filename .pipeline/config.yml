@@ -1,0 +1,12 @@
+general:
+steps:
+  mtaBuild:
+    buildTarget: 'CF'
+  cloudFoundryDeploy:
+    deployTool: 'mtaDeployPlugin'
+    deployType: 'standard'
+    cloudFoundry:
+      apiEndpoint: "https://api.cf.eu20.hana.ondemand.com"
+      org: 'CPKorea_scpcfnl'
+      space: 'Piper'
+      credentialsId: 'cf-credential-id'
