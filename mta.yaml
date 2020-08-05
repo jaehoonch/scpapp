@@ -20,6 +20,7 @@ modules:
           url: '~{url}'
       - name: portal_resources_scpapp
       - name: scpapp-uaa
+      - name: lg-theme-designer
   - name: scpapp_ui_deployer
     type: com.sap.html5.application-content
     path: scpapp_ui_deployer
@@ -43,7 +44,7 @@ modules:
     type: java
     path: srv
     parameters:
-      memory: 1024M
+      memory: 896M
     provides:
       - name: srv_api
         properties:
@@ -53,6 +54,8 @@ modules:
         properties:
           JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml: {"service_name_for_DefaultDB" : "~{hdi-container-name}"}]'
       - name: scpapp-uaa
+      - name: lg-autoscaler
+      - name: lg-logging
   - name: OrderList
     type: html5
     path: OrderList
@@ -108,4 +111,22 @@ resources:
     parameters:
       service-plan: standard
       service: portal
+    type: org.cloudfoundry.managed-service
+  - name: lg-theme-designer
+    parameters:
+      service-name: lg-theme-designer
+      service: theming
+      service-plan: standard
+    type: org.cloudfoundry.managed-service
+  - name: lg-autoscaler
+    parameters:
+      service-name: lg-autoscaler
+      service: autoscaler
+      service-plan: standard
+    type: org.cloudfoundry.managed-service
+  - name: lg-logging
+    parameters:
+      service-name: lg-logging
+      service: application-logs
+      service-plan: lite
     type: org.cloudfoundry.managed-service
